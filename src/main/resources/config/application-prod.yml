@@ -1,0 +1,7 @@
+amazon:
+  dynamodb:
+    local: false
+    region: ap-sortheast-1
+    tableprefix: prod-
+  credential:
+    profile: default

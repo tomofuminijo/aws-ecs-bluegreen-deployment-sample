@@ -1,0 +1,29 @@
+{
+    "taskDefinition": "java-webapp-demo:1",
+    "cluster": "java-webapp-cluster",
+    "loadBalancers": [
+        {
+            "targetGroupArn": "arn:aws:elasticloadbalancing:ap-southeast-1:505254173539:targetgroup/DevOpsPipelineDemoTarget1/7b8ecc5ba3ea7ec5",
+            "containerName": "java-website",
+            "containerPort": 8080
+        }
+    ],
+    "desiredCount": 2,
+    "launchType": "FARGATE",
+    "schedulingStrategy": "REPLICA",
+    "deploymentController": {
+        "type": "CODE_DEPLOY"
+    },
+    "networkConfiguration": {
+        "awsvpcConfiguration": {
+            "subnets": [
+                "subnet-00ba9390816f52674",
+                "subnet-00a1ed7383fb073ff"
+            ],
+            "securityGroups": [
+                "sg-071c5b49aab9883fa"
+            ],
+            "assignPublicIp": "ENABLED"
+        }
+    }
+}
