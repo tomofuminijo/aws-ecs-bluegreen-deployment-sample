@@ -1,6 +1,6 @@
 {
-    "taskDefinition": "java-webapp-demo:1",
-    "cluster": "java-webapp-cluster",
+    "taskDefinition": "<TASK_DEFINITION>:1",
+    "cluster": "<CLUSTER_NAME>",
     "loadBalancers": [
         {
             "targetGroupArn": "<ALB_TARGET_GROUP_ARN>",
