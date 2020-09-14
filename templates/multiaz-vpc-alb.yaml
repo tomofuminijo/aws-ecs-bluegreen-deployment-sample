@@ -274,7 +274,8 @@ Resources:
   ALBTargetGroup1:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
-      HealthCheckIntervalSeconds: 60
+      HealthCheckIntervalSeconds: 10
+      HealthyThresholdCount: 2
       UnhealthyThresholdCount: 10
       HealthCheckPath: /
       Name: DevOpsPipelineDemoTarget1
@@ -289,7 +290,8 @@ Resources:
   ALBTargetGroup2:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
-      HealthCheckIntervalSeconds: 60
+      HealthCheckIntervalSeconds: 10
+      HealthyThresholdCount: 2
       UnhealthyThresholdCount: 10
       HealthCheckPath: /
       Name: DevOpsPipelineDemoTarget2
