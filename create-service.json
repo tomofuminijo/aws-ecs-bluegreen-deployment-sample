@@ -4,7 +4,7 @@
     "loadBalancers": [
         {
             "targetGroupArn": "<ALB_TARGET_GROUP_ARN>",
-            "containerName": "java-website",
+            "containerName": "java-web-app",
             "containerPort": 8080
         }
     ],
