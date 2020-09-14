@@ -3,7 +3,7 @@
     "cluster": "java-webapp-cluster",
     "loadBalancers": [
         {
-            "targetGroupArn": "arn:aws:elasticloadbalancing:ap-southeast-1:505254173539:targetgroup/DevOpsPipelineDemoTarget1/7b8ecc5ba3ea7ec5",
+            "targetGroupArn": "<ALB_TARGET_GROUP_ARN>",
             "containerName": "java-website",
             "containerPort": 8080
         }
@@ -17,11 +17,11 @@
     "networkConfiguration": {
         "awsvpcConfiguration": {
             "subnets": [
-                "subnet-00ba9390816f52674",
-                "subnet-00a1ed7383fb073ff"
+                "<SUBNET_ID_1>",
+                "<SUBNET_ID_2>"
             ],
             "securityGroups": [
-                "sg-071c5b49aab9883fa"
+                "<SECURITY_GROUP_ID>"
             ],
             "assignPublicIp": "ENABLED"
         }
