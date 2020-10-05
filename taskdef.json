@@ -2,7 +2,7 @@
     "executionRoleArn": "arn:aws:iam::505254173539:role/ecsTaskExecutionRole",
     "containerDefinitions": [
         {
-            "name": "java-website",
+            "name": "java-web-app",
             "image": "<IMAGE1_NAME>",
             "essential": true,
             "portMappings": [
