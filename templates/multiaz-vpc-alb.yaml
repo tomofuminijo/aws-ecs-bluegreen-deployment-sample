@@ -35,7 +35,7 @@ Parameters:
     Type: 'AWS::EC2::AvailabilityZone::Name'
     Default: ap-southeast-1b
 Resources:
-  DevOpsECSCodeBuildDemoRole:
+  DevOpsECSCodeBuildDemoServiceRole:
     Type: 'AWS::IAM::Role'
     Properties:
       AssumeRolePolicyDocument:
@@ -49,6 +49,20 @@ Resources:
               - 'sts:AssumeRole'
       ManagedPolicyArns:
         - 'arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPowerUser'
+  DevOpsECSTaskDemoRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ecs-tasks.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess'
   VPC:
     Type: 'AWS::EC2::VPC'
     Properties:
