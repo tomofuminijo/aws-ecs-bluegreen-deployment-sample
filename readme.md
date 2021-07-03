@@ -366,7 +366,11 @@ git push origin main
     - ランタイム: standard
     - イメージ: aws/codebuild/amazonlinux2-x86_64-standard:3.0
     - 特権付与: チェックを入れる
-    - サービスロール: 新しいサービスロール (デフォルトのまま)
+    - サービスロール: 既存のサービスロール
+    - ロール名: DevOpsECSCodeBuildDemoServiceRole を含むロールを選択
+    - 環境の追加設定を開き、環境変数に以下を設定
+      - AWS_ACCOUNT_ID 、　<your_account_id>、プレーンテキスト
+      - REPOSITORY_URI 、 <your_account_id>.dkr.ecr.<your_region>.amazonaws.com/ecssample, プレーンテキスト
     - その他はデフォルトのままで、"CodePipeline に進む" ボタンをクリックします
   - その他はデフォルトのままで、"次へ" ボタンをクリックします
 - "デプロイステージを追加する" 画面にて"導入段階をスキップ" ボタンをクリックし、次のダイアログで"スキップ" ボタンをクリックする
