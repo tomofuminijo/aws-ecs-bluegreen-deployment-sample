@@ -403,11 +403,28 @@ git push origin main
 これで、Pipeline の構成ができました。  
 すぐに実行してみるには、ECSSamplePipeline 画面にて"変更をリリースする" ボタンをクリックします。
 
+## Pipeline を利用したデプロイ
 
+Cloud9 上で、src/main/resoruces/templates/index.html ファイルを開き内容を変更します。  
+以下のコマンドを実行して、コードをpush します。
+
+```
+git add .
+git commit -m "Blue/Green Sample"
+git push origin main
+```
+
+CodePipline が正常に実行されていることをマネージメントコンソールで確認します。
+デプロイまで正常に終わったら、実際の画面に反映されていることを確認します。
+
+以上で、サンプルの内容は修了です。
 
 # 後片付け
 
-手順の逆で、リソースを削除してください。
+以下の順でリソースを削除してください。
+
+## CodePipeline の後片付け
+1. マネージメントコンソールでECSSamplePipeline を削除
 
 ## ECS の後片付け
 
@@ -418,6 +435,12 @@ git push origin main
 
 ## CodeDeploy の後片付け
 1. CodeDeploy -> アプリケーション から"AppECS-ECSSampleClsuter-ECSSampleService" アプリケーションを削除
+
+## CodeBuild の後片付け
+1. ECSSampleBuild を削除
+
+## CodeCommit の後片付け
+1. ECSSampleCode を削除
 
 ## ECR の後片付け
 1. ECR 上のecssample を削除
