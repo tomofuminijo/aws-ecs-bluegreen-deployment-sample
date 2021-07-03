@@ -3,6 +3,7 @@
 以下のことを実施できるサンプルです。
 - Cloud9 上で、シンプルなSpring Boot Web Application をDokcer イメージにビルドし、Dokcer コンテナとして動かし、ECR にリポジトリを作成してイメージを格納する
 - ビルドしたDokcer イメージをECS を利用しFargate 上で動かし、Blue/Green デプロイを実施する
+- CodePipeline を利用して、コードをリポジトリにPush したらビルド及びデプロイが自動で実行されるようにする
 
 *重要*: こちらのサンプルを実行する場合、AWS 料金が発生する可能性があります。サンプルの実行が終了したら適切にリソースの削除をしてください。
 
@@ -297,6 +298,92 @@ ECS 画面にて、タスク定義から"sampletask" にチェックを入れて
 置換が終わったら、ELBEndpoint を再度書くにすると、Ver2.0.0:Green に変わっていることを確認できます。 
 デフォルトの動作では、Green に入れ替わった後に1時間待機しているため、CodeDeploy のデプロイ画面にて、"元のタスクセットの修了" ボタンをクリックすると即座にデプロイ処理が完了します。
 
+
+# CodePipeline でコードをPush してからデプロイまでを自動化する
+
+CodeCommit -> CodeBuild -> CodeDeploy の一連の流れをCodePipeline を利用してパイプラインとして自動的に処理できるようにします。
+
+## CodeCommit でコードリポジトリを作成する
+
+Cloud9 にて以下のコマンドを実行し、CodeCommit 上にリポジトリを作成します。
+
+```
+aws codecommit create-repository --repository-name ECSSampleCode --repository-description "My Sample repository" 
+```
+
+以下のように表示されます。
+
+```
+{
+    "repositoryMetadata": {
+        "repositoryName": "ECSSampleCode", 
+        "cloneUrlSsh": "ssh://git-codecommit.<your_region>.amazonaws.com/v1/repos/ECSSampleCode", 
+        "lastModifiedDate": 1625305775.534, 
+        "repositoryDescription": "My Sample repository", 
+        "cloneUrlHttp": "https://git-codecommit.<your_region>.amazonaws.com/v1/repos/ECSSampleCode", 
+        "creationDate": 1625305775.534, 
+        "repositoryId": "xxxxx-xxxx-4c74-xxxx-xxxxxx", 
+        "Arn": "arn:aws:codecommit:<your_region>:<your_account_id>:ECSSampleCode", 
+        "accountId": "<your_account_id>"
+    }
+}
+```
+
+次に、以下のコマンドを実行しGitHub からClone したコードをCodeCommit リポジトリにPush します。
+
+```
+cd ~/environment/aws-ecs-bluegreen-deployment-sample
+git add .
+git commit -m "My First Commit"
+git remote remove origin
+git remote add origin codecommit::<your_region>://ECSSampleCode
+git push origin main
+```
+
+マネージメントコンソールでCodeCommit にアクセスして、リポジトリが作成されコードが保存されていることを確認します。
+
+## Pipeline の作成
+
+マネージドコンソールで、CodePipeline サービスにアクセスします。
+以下の手順により、Pipeline の構成をします。
+
+- ナビゲーションペインにてパイプラインをクリックし、"パイプラインを作成する" ボタンをクリック
+- "パイプラインの設定を選択する" 画面にて以下の入力をします
+  - パイプライン名: ECSSamplePipeline
+  - サービスロール: "新しいサービスロール" を選択（デフォルト）
+  - その他はデフォルトのままで、"次へ" ボタンをクリックします
+- "ソースステージを追加する" 画面にて以下の入力をします
+  - ソースプロバイダ: CodeCommit 
+  - リポジトリ名: ECSSampleCode
+  - ブランチ名: main
+  - その他はデフォルトのままで、"次へ" ボタンをクリックします
+- "ビルドステージを追加する" 画面にて以下の入力をします
+  - プロバイダーを構築する: CodeBuild
+  - プロジェクト名: "プロジェクトを作成する" ボタンをクリックして、表示された"ビルドプロジェクトを作成する" 画面で以下を入力する
+    - プロジェクト名: ECSSampleBuild
+    - 環境イメージ: マネージド型イメージ (デフォルトのまま）
+    - オペレーティングシステム: Amazon Linux 2
+    - ランタイム: standard
+    - イメージ: aws/codebuild/amazonlinux2-x86_64-standard:3.0
+    - 特権付与: チェックを入れる
+    - サービスロール: 新しいサービスロール (デフォルトのまま)
+    - その他はデフォルトのままで、"CodePipeline に進む" ボタンをクリックします
+  - その他はデフォルトのままで、"次へ" ボタンをクリックします
+- "デプロイステージを追加する" 画面にて"導入段階をスキップ" ボタンをクリックし、次のダイアログで"スキップ" ボタンをクリックする
+- "パイプラインを作成する" ボタンをクリックします
+
+パイプラインを作成すると、パイプラインが初回実行されます。初回実行時にエラーが発生する可能性がありますが、無視してください。
+
+
+- "デプロイステージを追加する" 画面にて以下を入力します
+  - デプロイプロバイダー: Amazon ECS(ブルー/グリーン)
+  - AWS CodeDeploy アプリケーション名: AppECS-ECSSampleCluster で始まるものを選択
+  - AWS CodeDeploy デプロイグループ: ECSSampleClsuter が含まれるものを選択
+  - Amazon ECS タスク定義: BuildArtifact、taskdef.json
+  - AWS CodeDeploy AppSpec ファイル
+
+
+
 # 後片付け
 
 手順の逆で、リソースを削除してください。
@@ -315,15 +402,13 @@ ECS 画面にて、タスク定義から"sampletask" にチェックを入れて
 1. ECR 上のecssample を削除
 
 ## CloufFormation の後片付け
-1. 最初に作成したStack を削除
+1. 最初に作成したStack を削除、以下のコマンドを実行します。
+
+```
+aws cloudformation delete-stack --stack-name ecs-sample
+```
 
 ## Cloud9 の後片付け
 1. Cloud9 Environment を削除
 
 以上です。
-
-
-
-
-  - 
-    
