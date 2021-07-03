@@ -8,25 +8,54 @@
 
 # 初期構成
 
-## 初期インフラの構成
-
-templates/multiaz-vpc-alb.yaml をダウンロードして、任意のリージョンにてCloudFormation を利用して任意のStack 名でサンプル動作用のインフラを作成します。
-ECS を利用してコンテナを動かすためのVPC とALB 環境が自動的に構成されます。
-
 ## Cloud9 の起動
 
 任意のリージョンにてCloud9 を起動します。
 - インスタンスタイプ: m3.small 以上を推奨
 - Platform: Amazon Linux 2
 
+## コードのダウンロード
+
+Cloud9 でターミナルを開き、以下のコマンドを実行して、コードをダウンロードします。
+
+```
+git clone https://github.com/tomofuminijo/aws-ecs-bluegreen-deployment-sample.git
+```
+
+## 初期インフラの構成
+
+templates/multiaz-vpc-alb.yaml をCloudFormation で実行し、サンプル動作用のStack を作成します。
+ECS を利用してコンテナを動かすためのVPC とALB 環境などが自動的に構成されます。
+以下のコマンドを実行します。
+
+```
+cd ~/environment/aws-ecs-bluegreen-deployment-sample
+aws cloudformation create-stack --stack-name ecs-sample --template-body file://./templates/multiaz-vpc-alb.yaml --capabilities CAPABILITY_IAM
+```
+
+以下のコマンドを実行し、Stack の作成状況を確認します。
+
+```
+aws cloudformation describe-stacks --stack-name ecs-sample  --query 'Stacks[].StackStatus' --output text
+```
+
+"CREATE_COMPLETE" と表示されるとStack の作成が完了しています。
+
+以下のコマンドを実行することで、Stack の出力一覧を参照することができます。
+
+```
+aws cloudformation describe-stacks --stack-name ecs-sample --query 'Stacks[].Outputs[][OutputKey, OutputValue]' --output table
+
+```
+
 ## Amazon Corretto 11 およびMaven のインストール
 Cloud9 でTerminal を開き、以下のコマンドを実行します。
 
 Amazon Corretto 11 のインストール
 ```
+cd ~
 wget https://corretto.aws/downloads/latest/amazon-corretto-11-x64-linux-jdk.rpm
-
-sudo rpm -ihv /home/ec2-user/environment/amazon-corretto-11-x64-linux-jdk.rpm
+sudo rpm -ihv amazon-corretto-11-x64-linux-jdk.rpm
 ```
 
 Maven のインストール
@@ -39,17 +68,15 @@ sudo yum install -y apache-maven
 - 参考URL : [Maven を使用して設定する](https://docs.aws.amazon.com/ja_jp/cloud9/latest/user-guide/sample-java.html#sample-java-sdk-maven)
 
 
-
 # Docker イメージの作成及びCloud9 上での実行、ECR へのPush
 
 
-## コードのダウンロードおよびコンパイル
+## コードのコンパイル
 
-以下のコマンドを実行して、コードをダウンロードします。
+以下のコマンドを実行して、コードをコンパイルします。
 
 ```
-git clone https://github.com/tomofuminijo/aws-ecs-bluegreen-deployment-sample.git
-cd aws-ecs-bluegreen-deployment-sample
+cd ~/environment/aws-ecs-bluegreen-deployment-sample
 mvn package
 ```
 
@@ -58,7 +85,6 @@ mvn package
 以下のコマンドを実行して、Docker イメージをビルドします。
 　
 ```
-cd /home/ec2-user/environment/aws-ecs-bluegreen-deployment-sample
 docker build --tag java-webapp .
 ```
 
@@ -109,6 +135,8 @@ aws ecr create-repository --repository-name ecssample
 
 以下のコマンドを実行し、ローカル上でビルドしたイメージにリモートリポジトリのURI を指定し、  
 後続のBlue/Green デプロイを考慮して、blue というバージョンでタグ付けしておきます。
+<your_account_id> と <your_region> を適宜変更してからコマンドを実行します。
+
 
 ```
 docker tag java-webapp <your_account_id>.dkr.ecr.<your_region>.amazonaws.com/ecssample:blue
@@ -123,7 +151,6 @@ docker images
 次に、先ほど作成したECR リポジトリにイメージをPush します。  
   
 まずは以下のコマンドを実行し、プライベートなECR リポジトリにログインします。
-<your_account_id> と <your_region> を適宜変更してからコマンドを実行します。
 
 ```
 aws ecr get-login-password --region <your_region> | docker login --username AWS --password-stdin <your_account_id>.dkr.ecr.<your_region>.amazonaws.com
@@ -132,14 +159,13 @@ aws ecr get-login-password --region <your_region> | docker login --username AWS 
 "Login Succeeded" と表示されれば正常に実行できています。  
 
 次に、以下のコマンドを実行してリポジトリにイメージをPush します。  
-<your_account_id> と <your_region> を適宜変更してからコマンドを実行します。
 
 
 ```
 docker push <your_account_id>.dkr.ecr.<your_region>.amazonaws.com/ecssample:blue
 ```
 
-正常にPush できたら、マネジメントコンソールでECR 上のリポジトリを確認してみてください。
+正常にPush できたら、マネジメントコンソールでECR 上にリポジトリが作成されイメージが格納されていることを確認します。
 
 
 # Dokcer イメージをECS を利用しFargate 上で動かし、Blue/Green デプロイを実施する
@@ -194,7 +220,7 @@ CodeDeploy とECS が連携する際に必要となるIAM ロールを作成し�
 
 - ECSSampleClsuter 画面の下側の"サービス" タブにて、"作成" ボタンをクリック
 - "サービスの設定" 画面にて以下を入力
-  - 起動タイプ: Fargte
+  - 起動タイプ: FARGATE
   - タスク定義: sampletask
   - リビジョン: 1 (latest)
   - サービス名: ECSSampleService
@@ -221,6 +247,7 @@ CodeDeploy とECS が連携する際に必要となるIAM ロールを作成し�
   - その他はデフォルトのままで、"次のステップ" ボタンをクリック
 - "Auto Scaling (オプション)" 画面では何も変更せずに"次のステップ" ボタンをクリック
 - "確認" 画面で、"サービスの作成" ボタンをクリック
+- "サービスの表示" ボタンをクリック
 
 ### 動作確認
 
@@ -259,8 +286,8 @@ ECS 画面にて、タスク定義から"sampletask" にチェックを入れて
 - "sampletask:2" が作成される
 
 ### サービスの更新
-- クラスター -> ECSSampleClsuter -> "ECSSampleService2" にチェックを入れて"更新" ボタン
-- タスク定義: リビジョン: 2(latest) に変更
+- クラスター -> ECSSampleClsuter -> "ECSSampleService" にチェックを入れて"更新" ボタン
+- タスク定義: リビジョン: 2 (latest) に変更
 - その他は更新しないため、"ステップ 5: 確認" まで"次のステップ" ボタンをクリック
 - "サービスの更新" ボタンをクリック
 
@@ -270,12 +297,12 @@ ECS 画面にて、タスク定義から"sampletask" にチェックを入れて
 置換が終わったら、ELBEndpoint を再度書くにすると、Ver2.0.0:Green に変わっていることを確認できます。 
 デフォルトの動作では、Green に入れ替わった後に1時間待機しているため、CodeDeploy のデプロイ画面にて、"元のタスクセットの修了" ボタンをクリックすると即座にデプロイ処理が完了します。
 
-
 # 後片付け
 
 手順の逆で、リソースを削除してください。
 
 ## ECS の後片付け
+
 1. ECS サービスの削除
 2. タスクの削除
 3. ECS クラスターの削除
