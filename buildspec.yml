@@ -27,8 +27,10 @@ phases:
       - printf '[{"name":"java-web-app","imageUri":"%s"}]' $REPOSITORY_URI:$IMAGE_TAG > imagedefinitions.json
 artifacts:
   files: 
-#    - imageDetail.json
-    - imagedefinitions.json
+    # Amazon ECS blue/green deployments require an imageDetail.json file as an input to the deploy action.
+    - imageDetail.json
+    # Amazon ECS standard deployments require an imagedefinitions.json file as an input to the deploy action.
+    # - imagedefinitions.json
 cache:
   paths:
     - '/root/.m2/**/*'

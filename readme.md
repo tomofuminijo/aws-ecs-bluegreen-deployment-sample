@@ -378,13 +378,30 @@ git push origin main
 
 パイプラインを作成すると、パイプラインが初回実行されます。初回実行時にエラーが発生する可能性がありますが、無視してください。
 
+次に、パイプラインにデプロイステージを追加します。  
 
-- "デプロイステージを追加する" 画面にて以下を入力します
-  - デプロイプロバイダー: Amazon ECS(ブルー/グリーン)
+- パイプラインにて、ECSSamplePipeline をクリックします
+- "編集" ボタンをクリックします
+- 一番下の"+ ステージを追加する" ボタンをクリックします
+  - ステージ名: Deploy
+  - "ステージを追加する" ボタンをクリックします
+- "編集: Deploy" にて"アクショングループを追加する" ボタンをクリックし、以下の内容を入力します
+  - アクション名: ECSSampleDeploy
+  - アクションプロバイダー: Amazon ECS(ブルー/グリーン)
+  - 入力アーティファクト: 
+    - SourceArtifact を選択して"追加" ボタンをクリック
+    - BuildArtiifact を選択
   - AWS CodeDeploy アプリケーション名: AppECS-ECSSampleCluster で始まるものを選択
   - AWS CodeDeploy デプロイグループ: ECSSampleClsuter が含まれるものを選択
-  - Amazon ECS タスク定義: BuildArtifact、taskdef.json
-  - AWS CodeDeploy AppSpec ファイル
+  - Amazon ECS タスク定義: SourceArtifact、taskdef.json
+  - AWS CodeDeploy AppSpec ファイル: SourceArtifact、appspec.yaml
+  - 入力アーティファクトを持つイメージの詳細: BuildArtifact
+  - タスク定義のプレースホルダー文字: IMAGE1_NAME
+  - "完了" ボタンをクリック
+- "保存" ボタンをクリックし、"パイプラインの変更を保存する" 画面にて"保存" ボタン
+
+これで、Pipeline の構成ができました。  
+すぐに実行してみるには、ECSSamplePipeline 画面にて"変更をリリースする" ボタンをクリックします。
 
 
 
