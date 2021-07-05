@@ -12,7 +12,7 @@
 ## Cloud9 の起動
 
 任意のリージョンにてCloud9 を起動します。
-- インスタンスタイプ: m3.small 以上を推奨
+- インスタンスタイプ: t3.small 以上を推奨
 - Platform: Amazon Linux 2
 
 ## コードのダウンロード
