@@ -169,7 +169,7 @@ docker push <your_account_id>.dkr.ecr.<your_region>.amazonaws.com/ecssample:blue
 正常にPush できたら、マネジメントコンソールでECR 上にリポジトリが作成されイメージが格納されていることを確認します。
 
 
-# Dokcer イメージをECS を利用しFargate 上で動かし、Blue/Green デプロイを実施する
+# ECS を利用して、Dokcer イメージをFargate 上で動かし、Blue/Green デプロイを実施する
 
 ECR 上にPush したコンテナイメージをECS を利用してFargate 上で動かします。またその際にALB と連携してロードバランシングさせます。  
 またCodeDeploy と連携して、Blue/Green デプロイを実施します。
