@@ -303,6 +303,13 @@ ECS 画面にて、タスク定義から"sampletask" にチェックを入れて
 
 CodeCommit -> CodeBuild -> CodeDeploy の一連の流れをCodePipeline を利用してパイプラインとして自動的に処理できるようにします。
 
+## ソースコードのtaskdef.json を書き換える
+
+taskdef.json 内の <your_account_id> と、<repalce_this_with_DevOpsECSTaskDemoRole_cfn_created> をご自身の環境の内容に書き換えます。  
+
+※ <IMAGE1_NAME> はPipeline で置き換えられるプレースホルダーのため、修正しません。
+
+
 ## CodeCommit でコードリポジトリを作成する
 
 Cloud9 にて以下のコマンドを実行し、CodeCommit 上にリポジトリを作成します。
