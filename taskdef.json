@@ -20,6 +20,6 @@
     "networkMode": "awsvpc",
     "cpu": "512",
     "memory": "1024",
-    "taskRoleArn": "arn:aws:iam::<your_account_id>:role/<your_role_name>",
+    "taskRoleArn": "arn:aws:iam::<your_account_id>:role/<repalce_this_with_DevOpsECSTaskDemoRole_cfn_created>",
     "family": "java-webapp-demo"
 }
