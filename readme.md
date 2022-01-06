@@ -349,11 +349,13 @@ aws codecommit create-repository --repository-name ECSSampleCode --repository-de
 次に、以下のコマンドを実行しGitHub からClone したコードをCodeCommit リポジトリにPush します。
 
 ```
+export AWS_REGION=$(curl -s 169.254.169.254/latest/dynamic/instance-identity/document | jq -r .region)
+
 cd ~/environment/aws-ecs-bluegreen-deployment-sample
 git add .
 git commit -m "My First Commit"
 git remote remove origin
-git remote add origin codecommit::<your_region>://ECSSampleCode
+git remote add origin codecommit::$AWS_REGION://ECSSampleCode
 git push origin main
 ```
 
