@@ -37,7 +37,7 @@ aws cloudformation describe-stacks --stack-name ecs-sample --query 'Stacks[].Out
 ```
 
 
-## Amazon Corretto 11 およびMaven のインストール
+## Amazon Corretto 11、Maven およびその他ツールのインストール
 Cloud9 でTerminal を開き、以下のコマンドを実行します。
 
 Amazon Corretto 11 のインストール
@@ -52,6 +52,12 @@ Maven のインストール
 sudo wget http://repos.fedorapeople.org/repos/dchen/apache-maven/epel-apache-maven.repo -O /etc/yum.repos.d/epel-apache-maven.repo
 sudo sed -i s/\$releasever/6/g /etc/yum.repos.d/epel-apache-maven.repo
 sudo yum install -y apache-maven
+```
+
+jq のインストール
+```
+sudo yum install -y jq
+
 ```
 
 - 参考URL : [Maven を使用して設定する](https://docs.aws.amazon.com/ja_jp/cloud9/latest/user-guide/sample-java.html#sample-java-sdk-maven)
@@ -78,6 +84,7 @@ docker build --tag java-webapp .
 ```
 
 以下のコマンドを実行して、コンテナを起動しテストします。
+※ このアプリケーションは内部的にDynamoDB と連携するため、引数でCloud9 上のアクセスキーを渡しています。実際にECS 上で動かす場合はIAM ロールを指定することで、DynamoDB へのアクセス権限を渡します。
 
 ```
 docker run --rm -p 8080:8080 \
@@ -124,11 +131,12 @@ aws ecr create-repository --repository-name ecssample
 
 以下のコマンドを実行し、ローカル上でビルドしたイメージにリモートリポジトリのURI を指定し、  
 後続のBlue/Green デプロイを考慮して、blue というバージョンでタグ付けしておきます。
-<your_account_id> と <your_region> を適宜変更してからコマンドを実行します。
-
+**Note** Cloud9 環境から、リージョンとアカウントID を取得しています。
 
 ```
-docker tag java-webapp <your_account_id>.dkr.ecr.<your_region>.amazonaws.com/ecssample:blue
+export AWS_REGION=$(curl -s 169.254.169.254/latest/dynamic/instance-identity/document | jq -r .region)
+export AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+docker tag java-webapp $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/ecssample:blue
 ```
 
 以下のコマンドを実行すると、ローカル上のイメージにリポジトリURI とタグが付与されていることが確認できます。
@@ -142,7 +150,7 @@ docker images
 まずは以下のコマンドを実行し、プライベートなECR リポジトリにログインします。
 
 ```
-aws ecr get-login-password --region <your_region> | docker login --username AWS --password-stdin <your_account_id>.dkr.ecr.<your_region>.amazonaws.com
+aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
 ```
 
 "Login Succeeded" と表示されれば正常に実行できています。  
@@ -151,13 +159,16 @@ aws ecr get-login-password --region <your_region> | docker login --username AWS 
 
 
 ```
-docker push <your_account_id>.dkr.ecr.<your_region>.amazonaws.com/ecssample:blue
+docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/ecssample:blue
+
+echo Blue Image URI: $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/ecssample:blue
+
 ```
 
 正常にPush できたら、マネジメントコンソールでECR 上にリポジトリが作成されイメージが格納されていることを確認します。
 
 
-# ECS を利用して、Dokcer イメージをFargate 上で動かし、Blue/Green デプロイを実施する
+# ECS を利用して、Dokcer イメージをFargate 上で動かすし、Blue/Green デプロイを実施する
 
 ECR 上にPush したコンテナイメージをECS を利用してFargate 上で動かします。またその際にALB と連携してロードバランシングさせます。  
 またCodeDeploy と連携して、Blue/Green デプロイを実施します。
@@ -166,7 +177,6 @@ ECR 上にPush したコンテナイメージをECS を利用してFargate 上�
 
 ### ECS タスク定義を作成
 
-
 - マネージメントコンソールにて、ECS サービスにアクセスします。
 - ナビゲーションペインにて、"タスク定義" をクリックします。
 - "新しいタスク定義の作成" をクリックします。
@@ -174,15 +184,18 @@ ECR 上にPush したコンテナイメージをECS を利用してFargate 上�
   - Fargate を選択して、"次のステップ"
   - タスクとコンテナの定義の設定 にて以下を入力
       - タスク定義名： ecssampletask
-      - タスクロール：  ECSSampleTaskRole を含むロール  ※CFn にて作成済み
-      - タスク実行ロール： ECSSampleTaskExecutionRole を含むロール *CFn にて作成済み
-      - タスクサイズ： 1GB / 0.5 vCPU
+      - タスクロール：  ecs-sample-TaskRole で始まるロール  ※CFn にて作成済み
+      - オペレーティングシステムファミリー: Linux
+      - タスク実行ロール： ecs-sample-TaskExecutionRole で始まるロール *CFn にて作成済み
+      - タスクサイズ：
+        - タスクメモリ: 1GB
+        - タスクCPU: 0.5 vCPU
       - コンテナの追加 をクリック
         - コンテナ名： java-web-app
         - イメージ： <your_account_id>.dkr.ecr.<your_region>.amazonaws.com/ecssample:blue *先程作成したイメージURL
         - メモリ制限(MiB)： ソフト制限 1024 
         - ポートマッピング: コンテナポート： 8080  プロトコル: tcp
-        - CPU ユニット数: 512 cpu
+        - CPU ユニット数: 512
         - 上記以外はデフォルトのままで、[追加]ボタンをクリック
       - 以上で、[作成] ボタンをクリック
   - タスク定義の表示をクリック
@@ -208,12 +221,12 @@ ECR 上にPush したコンテナイメージをECS を利用してFargate 上�
   - サービス名: ECSSampleService
   - タスクの数: 4
   - デプロイメントタイプ: "Blue/Green デプロイメント (AWS CodeDeploy を使用)" にチェック
-  - CodeDeploy のサービスロール: ECSSampleCodeDeployRoleForECS を含むロール * CFn にて作成済み
+  - CodeDeploy のサービスロール: ecs-sample-CodeDeployRoleForECS で始まるロール * CFn にて作成済み
   - その他の項目はデフォルトのままで、"次のステップ" ボタンをクリック
 - "ネットワーク構成" 画面にて以下を入力
-  - クラスターVPC: 10.0.1.0/16 のものを選択 （CFn スタック名が付与されている物）
+  - クラスターVPC: 10.0.1.0/16 のものを選択 （CFn にて作成済み、ecs-sample-VPC）
   - サブネット: PublicSubnet1 および 2 を選択
-  - セキュリティグループ: "編集" ボタンをクリックし、"既存のセキュリティグループ" から"ECSTaskSecurityGroup" が名前に入っている物を選択し、"保存" ボタンをクリク
+  - セキュリティグループ: "編集" ボタンをクリックし、"既存のセキュリティグループ" から"ecs-sample-ECSTaskSecurityGroup" が名前に入っている物を選択し、"保存" ボタンをクリク
   - パブリックIP の自動割当: "ENABLED" (Defaultのまま)
   - "ロードバランシング" にて以下を設定
     - ロードバランサーの種類: Application Load Balancer
@@ -230,6 +243,10 @@ ECR 上にPush したコンテナイメージをECS を利用してFargate 上�
 - "Auto Scaling (オプション)" 画面では何も変更せずに"次のステップ" ボタンをクリック
 - "確認" 画面で、"サービスの作成" ボタンをクリック
 - "サービスの表示" ボタンをクリック
+
+
+このタイミングで、CodeDeploy の設定も完了しています。マネージメントコンソールでCodeDeploy にアクセスし、"アプリーけション" を確認してください。
+"AppECS-ECSSampleClsuter-ECSSampleService" というアプリケーショが作成されています。
 
 ### 動作確認
 
@@ -251,8 +268,14 @@ src/resource/templates/index.html
 cd /home/ec2-user/environment/aws-ecs-bluegreen-deployment-sample
 mvn package
 docker build --tag java-webapp .
-docker tag java-webapp <your_account_id>.dkr.ecr.<your_region>.amazonaws.com/ecssample:green
-docker push <your_account_id>.dkr.ecr.<your_region>.amazonaws.com/ecssample:green
+
+export AWS_REGION=$(curl -s 169.254.169.254/latest/dynamic/instance-identity/document | jq -r .region)
+export AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+
+docker tag java-webapp $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/ecssample:green
+docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/ecssample:green
+
+echo Green Image URI: $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/ecssample:green
 ```
 
 ### タスク定義を変更
@@ -277,7 +300,7 @@ ECS 画面にて、タスク定義から"sampletask" にチェックを入れて
 
 マネージメントコンソールで、CodeDeploy を選択し、実行中のデプロイメントID をクリックすると、デプロイの様子を観測できます。  
 置換が終わったら、ELBEndpoint を再度書くにすると、Ver2.0.0:Green に変わっていることを確認できます。 
-デフォルトの動作では、Green に入れ替わった後に1時間待機しているため、CodeDeploy のデプロイ画面にて、"元のタスクセットの修了" ボタンをクリックすると即座にデプロイ処理が完了します。
+デフォルトの動作では、Green に入れ替わった後に1時間待機しているため、CodeDeploy のデプロイ画面にて、"元のタスクセットの終了" ボタンをクリックすると即座にデプロイ処理が完了します。
 
 
 # CodePipeline でコードをPush してからデプロイまでを自動化する

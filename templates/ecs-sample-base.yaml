@@ -27,7 +27,7 @@ Parameters:
     Default: 10.1.0.0/16
     AllowedPattern: '[a-zA-Z0-9]+\..+'
 Resources:
-  ECSSampleCodeBuildDemoServiceRole:
+  CodeBuildDemoServiceRole:
     Type: 'AWS::IAM::Role'
     Properties:
       AssumeRolePolicyDocument:
@@ -41,7 +41,7 @@ Resources:
               - 'sts:AssumeRole'
       ManagedPolicyArns:
         - 'arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPowerUser'
-  ECSSampleTaskRole:
+  TaskRole:
     Type: 'AWS::IAM::Role'
     Properties:
       AssumeRolePolicyDocument:
@@ -55,7 +55,7 @@ Resources:
               - 'sts:AssumeRole'
       ManagedPolicyArns:
         - 'arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess'
-  ECSSampleTaskExecutionRole:
+  TaskExecutionRole:
     Type: 'AWS::IAM::Role'
     Properties:
       AssumeRolePolicyDocument:
@@ -67,7 +67,7 @@ Resources:
             Action: sts:AssumeRole
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
-  ECSSampleCodeDeployRoleForECS:
+  CodeDeployRoleForECS:
     Type: 'AWS::IAM::Role'
     Properties:
       AssumeRolePolicyDocument:
@@ -330,7 +330,7 @@ Resources:
       HealthyThresholdCount: 2
       UnhealthyThresholdCount: 10
       HealthCheckPath: /
-      Name: ECSSamplePipelineDemoTarget1
+      Name: PipelineDemoTarget1
       Port: 8080
       Protocol: HTTP
       TargetType: ip
@@ -346,7 +346,7 @@ Resources:
       HealthyThresholdCount: 2
       UnhealthyThresholdCount: 10
       HealthCheckPath: /
-      Name: ECSSamplePipelineDemoTarget2
+      Name: PipelineDemoTarget2
       Port: 8080
       Protocol: HTTP
       TargetType: ip
