@@ -27,7 +27,7 @@ Parameters:
     Default: 10.1.0.0/16
     AllowedPattern: '[a-zA-Z0-9]+\..+'
 Resources:
-  DevOpsECSCodeBuildDemoServiceRole:
+  ECSSampleCodeBuildDemoServiceRole:
     Type: 'AWS::IAM::Role'
     Properties:
       AssumeRolePolicyDocument:
@@ -41,7 +41,7 @@ Resources:
               - 'sts:AssumeRole'
       ManagedPolicyArns:
         - 'arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPowerUser'
-  DevOpsECSTaskDemoRole:
+  ECSSampleTaskRole:
     Type: 'AWS::IAM::Role'
     Properties:
       AssumeRolePolicyDocument:
@@ -55,7 +55,7 @@ Resources:
               - 'sts:AssumeRole'
       ManagedPolicyArns:
         - 'arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess'
-  ECSTaskExecutionRole:
+  ECSSampleTaskExecutionRole:
     Type: 'AWS::IAM::Role'
     Properties:
       AssumeRolePolicyDocument:
@@ -67,7 +67,7 @@ Resources:
             Action: sts:AssumeRole
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
-  CodeDeployRoleForECS:
+  ECSSampleCodeDeployRoleForECS:
     Type: 'AWS::IAM::Role'
     Properties:
       AssumeRolePolicyDocument:
@@ -330,7 +330,7 @@ Resources:
       HealthyThresholdCount: 2
       UnhealthyThresholdCount: 10
       HealthCheckPath: /
-      Name: DevOpsPipelineDemoTarget1
+      Name: ECSSamplePipelineDemoTarget1
       Port: 8080
       Protocol: HTTP
       TargetType: ip
@@ -346,7 +346,7 @@ Resources:
       HealthyThresholdCount: 2
       UnhealthyThresholdCount: 10
       HealthCheckPath: /
-      Name: DevOpsPipelineDemoTarget2
+      Name: ECSSamplePipelineDemoTarget2
       Port: 8080
       Protocol: HTTP
       TargetType: ip
@@ -355,66 +355,8 @@ Resources:
       TargetGroupAttributes:
         - Key: deregistration_delay.timeout_seconds
           Value: 60
-  ECSSampleJavaWebAppTaskDef: 
-    Type: AWS::ECS::TaskDefinition
-    Properties:
-      Family: 'java-webapp-demo'
-      ExecutionRoleArn: !Ref ECSTaskExecutionRole
-      TaskRoleArn: !Ref DevOpsECSTaskDemoRole
-      Cpu: 512
-      Memory: 1024
-      NetworkMode: awsvpc
-      ContainerDefinitions: 
-        - 
-          Name: 'java-web-app'
-          Image: 'public.ecr.aws/h8b2w9c7/ecssample'
-          Cpu: 512
-          PortMappings: 
-            - 
-              ContainerPort: 8080
-          Memory: 1024
-          Essential: true
-  ECSSampleClsuter:
-    Type: 'AWS::ECS::Cluster'
-    Properties:
-      CapacityProviders:
-        - FARGATE
-        - FARGATE_SPOT
-      DefaultCapacityProviderStrategy:
-        - CapacityProvider: FARGATE
-          Base: 1
-          Weight: 0
-        - CapacityProvider: FARGATE_SPOT
-          Weight: 1
-  ECSSampleService: 
-    Type: AWS::ECS::Service
-    DependsOn:
-      - ALBListener1
-      - ALBListener2
-    Properties: 
-      Cluster: 
-        Ref: 'ECSSampleClsuter'
-      DesiredCount: 2
-      LaunchType: FARGATE
-      SchedulingStrategy: REPLICA
-      LoadBalancers: 
-        -
-          ContainerName: 'java-web-app'
-          ContainerPort: 8080
-          TargetGroupArn: !Ref ALBTargetGroup1
-      TaskDefinition: 
-        Ref: 'ECSSampleJavaWebAppTaskDef'
-      NetworkConfiguration:
-        AwsvpcConfiguration:
-          AssignPublicIp: ENABLED
-          SecurityGroups:
-            - !Ref ECSTaskSecurityGroup
-          Subnets:
-            - !Ref PublicSubnet1
-            - !Ref PublicSubnet2
-      DeploymentController:
-        Type: CODE_DEPLOY
-        
+
+
 Outputs:
   VPC:
     Value: !Ref VPC

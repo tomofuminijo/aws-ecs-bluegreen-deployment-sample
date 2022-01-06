@@ -162,13 +162,6 @@ docker push <your_account_id>.dkr.ecr.<your_region>.amazonaws.com/ecssample:blue
 ECR 上にPush したコンテナイメージをECS を利用してFargate 上で動かします。またその際にALB と連携してロードバランシングさせます。  
 またCodeDeploy と連携して、Blue/Green デプロイを実施します。
 
-## 事前のIAM ロールの作成
-
-CodeDeploy とECS が連携する際に必要となるIAM ロールを作成します。  
-作成手順は以下の内容を確認してください。
-- [Amazon ECS CodeDeploy IAM Role - Amazon Elastic Container Service](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/codedeploy_IAM_role.html)
-
-
 ## ECS の構成
 
 ### ECS タスク定義を作成
@@ -180,13 +173,13 @@ CodeDeploy とECS が連携する際に必要となるIAM ロールを作成し�
 - タスク定義の設定内容
   - Fargate を選択して、"次のステップ"
   - タスクとコンテナの定義の設定 にて以下を入力
-      - タスク定義名： sampletask
-      - タスクロール：  DevOpsECSTaskDemoRole を含むロール  ※CFn にて作成済み
-      - タスク実行ロール： ecsTaskExecutionRole (初回実施時は、自動で作成される)
+      - タスク定義名： ecssampletask
+      - タスクロール：  ECSSampleTaskRole を含むロール  ※CFn にて作成済み
+      - タスク実行ロール： ECSSampleTaskExecutionRole を含むロール *CFn にて作成済み
       - タスクサイズ： 1GB / 0.5 vCPU
       - コンテナの追加 をクリック
         - コンテナ名： java-web-app
-        - イメージ： <your_account_id>.dkr.ecr.<your_region>.amazonaws.com/ecssample:blue
+        - イメージ： <your_account_id>.dkr.ecr.<your_region>.amazonaws.com/ecssample:blue *先程作成したイメージURL
         - メモリ制限(MiB)： ソフト制限 1024 
         - ポートマッピング: コンテナポート： 8080  プロトコル: tcp
         - CPU ユニット数: 512 cpu
@@ -210,12 +203,12 @@ CodeDeploy とECS が連携する際に必要となるIAM ロールを作成し�
 - ECSSampleClsuter 画面の下側の"サービス" タブにて、"作成" ボタンをクリック
 - "サービスの設定" 画面にて以下を入力
   - 起動タイプ: FARGATE
-  - タスク定義: sampletask
+  - タスク定義: ecssampletask
   - リビジョン: 1 (latest)
   - サービス名: ECSSampleService
   - タスクの数: 4
   - デプロイメントタイプ: "Blue/Green デプロイメント (AWS CodeDeploy を使用)" にチェック
-  - CodeDeploy のサービスロール*: 先ほど作成したCodeDeploy 用のIAM ロール ("ecsCodeDeployRole")
+  - CodeDeploy のサービスロール: ECSSampleCodeDeployRoleForECS を含むロール * CFn にて作成済み
   - その他の項目はデフォルトのままで、"次のステップ" ボタンをクリック
 - "ネットワーク構成" 画面にて以下を入力
   - クラスターVPC: 10.0.1.0/16 のものを選択 （CFn スタック名が付与されている物）
