@@ -397,3 +397,10 @@ Outputs:
       - ApplicationLoadBalancer
       - DNSName
     Description: ELBEndopoint
+  TaskRole:
+    Value: !Ref TaskRole
+    Description: TaskRole
+  TaskExecutionRole:
+    Value: !Ref TaskExecutionRole
+    Description: TaskExecutionRole
+

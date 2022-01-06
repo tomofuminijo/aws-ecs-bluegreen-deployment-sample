@@ -311,6 +311,12 @@ CodeCommit -> CodeBuild -> CodeDeploy の一連の流れをCodePipeline を利�
 
 taskdef.json 内の <your_account_id> と、<repalce_this_with_DevOpsECSTaskDemoRole_cfn_created> をご自身の環境の内容に書き換えます。  
 
+ロール名は以下のコマンドで確認できます。   
+
+```
+aws cloudformation describe-stacks --stack-name ecs-sample --query 'Stacks[].Outputs[?contains(OutputKey, `Role`)][OutputKey, OutputValue]' --output table
+```
+
 ※ <IMAGE1_NAME> はPipeline で置き換えられるプレースホルダーのため、修正しません。
 
 

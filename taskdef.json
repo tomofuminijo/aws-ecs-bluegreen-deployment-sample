@@ -1,5 +1,5 @@
 {
-    "executionRoleArn": "arn:aws:iam::<your_account_id>:role/<repalce_this_with_ECSTaskExecutionRole_cfn_created>",
+    "executionRoleArn": "arn:aws:iam::<your_account_id>:role/<repalce_this_with_ecs-sample-TaskExecutionRole>",
     "containerDefinitions": [
         {
             "name": "java-web-app",
@@ -20,6 +20,6 @@
     "networkMode": "awsvpc",
     "cpu": "512",
     "memory": "1024",
-    "taskRoleArn": "arn:aws:iam::<your_account_id>:role/<repalce_this_with_DevOpsECSTaskDemoRole_cfn_created>",
+    "taskRoleArn": "arn:aws:iam::<your_account_id>:role/<repalce_this_with_ecs-sample-ECSTaskRole>",
     "family": "java-webapp-demo"
 }
