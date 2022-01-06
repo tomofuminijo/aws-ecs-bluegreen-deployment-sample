@@ -55,6 +55,30 @@ Resources:
               - 'sts:AssumeRole'
       ManagedPolicyArns:
         - 'arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess'
+  ECSTaskExecutionRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+  CodeDeployRoleForECS:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: codedeploy.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AWSCodeDeployRoleForECS
   VPC:
     Type: 'AWS::EC2::VPC'
     Properties:
@@ -335,6 +359,7 @@ Resources:
     Type: AWS::ECS::TaskDefinition
     Properties:
       Family: 'java-webapp-demo'
+      ExecutionRoleArn: !Ref ECSTaskExecutionRole
       TaskRoleArn: !Ref DevOpsECSTaskDemoRole
       Cpu: 512
       Memory: 1024
@@ -361,6 +386,35 @@ Resources:
           Weight: 0
         - CapacityProvider: FARGATE_SPOT
           Weight: 1
+  ECSSampleService: 
+    Type: AWS::ECS::Service
+    DependsOn:
+      - ALBListener1
+      - ALBListener2
+    Properties: 
+      Cluster: 
+        Ref: 'ECSSampleClsuter'
+      DesiredCount: 2
+      LaunchType: FARGATE
+      SchedulingStrategy: REPLICA
+      LoadBalancers: 
+        -
+          ContainerName: 'java-web-app'
+          ContainerPort: 8080
+          TargetGroupArn: !Ref ALBTargetGroup1
+      TaskDefinition: 
+        Ref: 'ECSSampleJavaWebAppTaskDef'
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: ENABLED
+          SecurityGroups:
+            - !Ref ECSTaskSecurityGroup
+          Subnets:
+            - !Ref PublicSubnet1
+            - !Ref PublicSubnet2
+      DeploymentController:
+        Type: CODE_DEPLOY
+        
 Outputs:
   VPC:
     Value: !Ref VPC

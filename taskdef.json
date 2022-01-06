@@ -1,5 +1,5 @@
 {
-    "executionRoleArn": "arn:aws:iam::<your_account_id>:role/ecsTaskExecutionRole",
+    "executionRoleArn": "arn:aws:iam::<your_account_id>:role/<repalce_this_with_ECSTaskExecutionRole_cfn_created>",
     "containerDefinitions": [
         {
             "name": "java-web-app",
