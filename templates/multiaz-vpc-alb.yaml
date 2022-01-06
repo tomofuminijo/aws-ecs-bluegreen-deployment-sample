@@ -26,14 +26,6 @@ Parameters:
     Type: String
     Default: 10.1.0.0/16
     AllowedPattern: '[a-zA-Z0-9]+\..+'
-  AZ1:
-    Description: input Availability Zone
-    Type: 'AWS::EC2::AvailabilityZone::Name'
-    Default: ap-southeast-1a
-  AZ2:
-    Description: input Availability Zone
-    Type: 'AWS::EC2::AvailabilityZone::Name'
-    Default: ap-southeast-1b
 Resources:
   DevOpsECSCodeBuildDemoServiceRole:
     Type: 'AWS::IAM::Role'
@@ -84,7 +76,9 @@ Resources:
       VpcId: !Ref VPC
       CidrBlock: !Ref PublicSubnetCIDR1
       MapPublicIpOnLaunch: 'true'
-      AvailabilityZone: !Ref AZ1
+      AvailabilityZone: !Select 
+        - 0
+        - Fn::GetAZs: !Ref 'AWS::Region'
       Tags:
         - Key: Name
           Value: !Join 
@@ -103,7 +97,9 @@ Resources:
       VpcId: !Ref VPC
       CidrBlock: !Ref PublicSubnetCIDR2
       MapPublicIpOnLaunch: 'true'
-      AvailabilityZone: !Ref AZ2
+      AvailabilityZone: !Select 
+        - 1
+        - Fn::GetAZs: !Ref 'AWS::Region'
       Tags:
         - Key: Name
           Value: !Join 
@@ -122,7 +118,9 @@ Resources:
       VpcId: !Ref VPC
       CidrBlock: !Ref PrivateSubnetCIDR1
       MapPublicIpOnLaunch: 'true'
-      AvailabilityZone: !Ref AZ1
+      AvailabilityZone: !Select 
+        - 0
+        - Fn::GetAZs: !Ref 'AWS::Region'
       Tags:
         - Key: Name
           Value: !Join 
@@ -141,7 +139,9 @@ Resources:
       VpcId: !Ref VPC
       CidrBlock: !Ref PrivateSubnetCIDR2
       MapPublicIpOnLaunch: 'true'
-      AvailabilityZone: !Ref AZ2
+      AvailabilityZone: !Select 
+        - 1
+        - Fn::GetAZs: !Ref 'AWS::Region'
       Tags:
         - Key: Name
           Value: !Join 
@@ -348,10 +348,14 @@ Outputs:
     Value: !Ref PrivateSubnet2
     Description: Subnet ID for the private subnet2
   AZ1:
-    Value: !Ref AZ1
+    Value: !GetAtt
+      - PublicSubnet1
+      - AvailabilityZone
     Description: AZ1
   AZ2:
-    Value: !Ref AZ2
+    Value: !GetAtt
+      - PublicSubnet2
+      - AvailabilityZone
     Description: AZ2
   ALBTargetGroup1:
     Value: !Ref ALBTargetGroup1
