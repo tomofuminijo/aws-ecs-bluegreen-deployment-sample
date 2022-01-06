@@ -25,29 +25,17 @@ git clone https://github.com/tomofuminijo/aws-ecs-bluegreen-deployment-sample.gi
 
 ## 初期インフラの構成
 
-templates/multiaz-vpc-alb.yaml をCloudFormation で実行し、サンプル動作用のStack を作成します。
-ECS を利用してコンテナを動かすためのVPC とALB 環境などが自動的に構成されます。
-以下のコマンドを実行します。
+templates/ecs-sample-base.yaml をCloudFormation で実行し、サンプル動作用のStack を作成します。
+ECS を利用してコンテナを動かすためのVPC とALB 環境、ECS が自動的に構成されます。
+以下のコマンドを実行します。Stack を作成完了まで待機したあとに、Stack のアウトプットを表示します。
 
 ```
 cd ~/environment/aws-ecs-bluegreen-deployment-sample
-aws cloudformation create-stack --stack-name ecs-sample --template-body file://./templates/multiaz-vpc-alb.yaml --capabilities CAPABILITY_IAM
-```
-
-以下のコマンドを実行し、Stack の作成状況を確認します。
-
-```
-aws cloudformation describe-stacks --stack-name ecs-sample  --query 'Stacks[].StackStatus' --output text
-```
-
-"CREATE_COMPLETE" と表示されるとStack の作成が完了しています。
-
-以下のコマンドを実行することで、Stack の出力一覧を参照することができます。
-
-```
+aws cloudformation create-stack --stack-name ecs-sample --template-body file://./templates/ecs-sample-base.yaml --capabilities CAPABILITY_IAM
+aws cloudformation wait stack-create-complete --stack-name ecs-sample
 aws cloudformation describe-stacks --stack-name ecs-sample --query 'Stacks[].Outputs[][OutputKey, OutputValue]' --output table
-
 ```
+
 
 ## Amazon Corretto 11 およびMaven のインストール
 Cloud9 でTerminal を開き、以下のコマンドを実行します。

@@ -331,6 +331,36 @@ Resources:
       TargetGroupAttributes:
         - Key: deregistration_delay.timeout_seconds
           Value: 60
+  ECSSampleJavaWebAppTaskDef: 
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: 'java-webapp-demo'
+      TaskRoleArn: !Ref DevOpsECSTaskDemoRole
+      Cpu: 512
+      Memory: 1024
+      NetworkMode: awsvpc
+      ContainerDefinitions: 
+        - 
+          Name: 'java-web-app'
+          Image: 'public.ecr.aws/h8b2w9c7/ecssample'
+          Cpu: 512
+          PortMappings: 
+            - 
+              ContainerPort: 8080
+          Memory: 1024
+          Essential: true
+  ECSSampleClsuter:
+    Type: 'AWS::ECS::Cluster'
+    Properties:
+      CapacityProviders:
+        - FARGATE
+        - FARGATE_SPOT
+      DefaultCapacityProviderStrategy:
+        - CapacityProvider: FARGATE
+          Base: 1
+          Weight: 0
+        - CapacityProvider: FARGATE_SPOT
+          Weight: 1
 Outputs:
   VPC:
     Value: !Ref VPC
