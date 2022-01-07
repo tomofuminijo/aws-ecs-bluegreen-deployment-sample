@@ -54,13 +54,14 @@ sudo sed -i s/\$releasever/6/g /etc/yum.repos.d/epel-apache-maven.repo
 sudo yum install -y apache-maven
 ```
 
-jq のインストール
+- 参考URL : [Maven を使用して設定する](https://docs.aws.amazon.com/ja_jp/cloud9/latest/user-guide/sample-java.html#sample-java-sdk-maven)
+
+jq のインストール (手順を簡略化するために利用します)
 ```
 sudo yum install -y jq
 
 ```
 
-- 参考URL : [Maven を使用して設定する](https://docs.aws.amazon.com/ja_jp/cloud9/latest/user-guide/sample-java.html#sample-java-sdk-maven)
 
 
 # Docker イメージの作成及びCloud9 上での実行、ECR へのPush
