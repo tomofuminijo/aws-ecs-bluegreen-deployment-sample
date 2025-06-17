@@ -1,7 +1,19 @@
-FROM amazoncorretto:11-alpine
+# -------- 1st stage : build --------
+FROM maven:3.9-amazoncorretto-17-alpine AS builder
 
-# ENV SERVER_SERVLET_CONTEXT_PATH=/demo
+WORKDIR /app
 
-ARG JAR_FILE=target/my-greeting-web-1.0.0.jar
-ADD ${JAR_FILE} my-greeting-web.jar
-ENTRYPOINT ["java", "-jar", "/my-greeting-web.jar"]
+COPY pom.xml .
+RUN mvn -B dependency:go-offline
+
+COPY src ./src
+RUN mvn -B clean package -DskipTests
+
+# -------- 2nd stage : runtime --------
+FROM amazoncorretto:17-alpine
+
+WORKDIR /app
+COPY --from=builder /app/target/*.jar app.jar
+
+EXPOSE 8080
+ENTRYPOINT ["java","-jar","/app/app.jar"]
